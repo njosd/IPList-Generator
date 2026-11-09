@@ -191,7 +191,7 @@ def main():
         args.report.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         print(json.dumps(report, indent=2, ensure_ascii=False))
         return 0
-    except (ValueError, OSError, RuntimeError, subprocess.TimeoutExpired) as exc:
+    except (ValueError, OSError, RuntimeError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
 
