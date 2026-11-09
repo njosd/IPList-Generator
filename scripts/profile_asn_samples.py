@@ -47,26 +47,27 @@ def query_cymru(ips, dig_path, timeout):
     for start in range(0, len(queries), 100):
         chunk = queries[start:start + 100]
         proc = subprocess.run(
-            [dig_path, "+time=3", "+tries=1", "+short", "TXT", *chunk],
+            [dig_path, "+time=3", "+tries=1", "+noall", "+answer", "TXT", *chunk],
             text=True, capture_output=True, timeout=timeout, check=False
         )
         if proc.returncode not in (0,):
             raise RuntimeError(f"dig failed (exit {proc.returncode}): {proc.stderr.strip()}")
-        # dig emits answer rows in query order when multiple names are supplied,
-        # but may omit unanswered names. Use a per-query fallback for ambiguous
-        # output lengths so that no result is assigned to the wrong IP.
-        lines = [line.strip() for line in proc.stdout.splitlines() if line.strip()]
-        if len(lines) == len(chunk):
-            for ip, line in zip(ips[start:start + len(chunk)], lines):
-                results[ip] = parse_answer(line)
-        else:
-            for ip, qname in zip(ips[start:start + len(chunk)], chunk):
-                one = subprocess.run(
-                    [dig_path, "+time=3", "+tries=1", "+short", "TXT", qname],
-                    text=True, capture_output=True, timeout=timeout, check=False
-                )
-                line = next((x.strip() for x in one.stdout.splitlines() if x.strip()), "")
-                results[ip] = parse_answer(line) if line else None
+        # +answer includes the queried owner name, so missing answers can never
+        # shift the mapping and be assigned to the wrong IP.
+        for ip, qname in zip(ips[start:start + len(chunk)], chunk):
+            results[ip] = None
+        for line in proc.stdout.splitlines():
+            fields = line.split()
+            if len(fields) < 5 or not fields[0].endswith(".origin.asn.cymru.com."):
+                continue
+            owner = fields[0].removesuffix(".origin.asn.cymru.com.")
+            try:
+                queried_ip = ".".join(reversed(owner.split(".")))
+                ipaddress.IPv4Address(queried_ip)
+            except ValueError:
+                continue
+            txt = " ".join(fields[4:])
+            results[queried_ip] = parse_answer(txt)
     return results
 
 def parse_answer(line):
