@@ -1,0 +1,65 @@
+{
+  "comparison_date": "2026-11-09",
+  "baseline": {
+    "file": "ros-dpbr-CT-CMCC(1).rsc",
+    "line_count": 9724,
+    "parsed_collapsed_CT_ranges": 5082,
+    "parsed_collapsed_CMCC_ranges": 1555,
+    "CT_address_count": 197529427,
+    "CMCC_address_count": 159453952,
+    "CT_CMCC_overlap_address_count": 0
+  },
+  "method": "Parsed the uploaded RouterOS RSC, normalized CIDRs to IPv4 intervals, derived candidate exclusive address space by subtracting the other operator's candidate ranges, then computed exact address-space intersections and differences. No baseline prefixes or raw production entries are included in this report.",
+  "results": {
+    "gaoyifan_china_operator_ip": {
+      "CT": {
+        "baseline_addresses": 197529427,
+        "candidate_exclusive_addresses": 131525375,
+        "common_addresses": 131137791,
+        "baseline_only_addresses": 66391636,
+        "candidate_only_addresses": 387584,
+        "baseline_coverage_percent": 66.3889,
+        "candidate_coverage_percent": 99.7053
+      },
+      "CMCC": {
+        "baseline_addresses": 159453952,
+        "candidate_exclusive_addresses": 41548288,
+        "common_addresses": 41329408,
+        "baseline_only_addresses": 118124544,
+        "candidate_only_addresses": 218880,
+        "baseline_coverage_percent": 25.9193,
+        "candidate_coverage_percent": 99.4731
+      },
+      "candidate_CT_CMCC_overlap_addresses_after_exclusion": 0
+    },
+    "metowolf_iplist": {
+      "CT": {
+        "baseline_addresses": 197529427,
+        "candidate_exclusive_addresses": 119458064,
+        "common_addresses": 114813712,
+        "baseline_only_addresses": 82715715,
+        "candidate_only_addresses": 4644352,
+        "baseline_coverage_percent": 58.1248,
+        "candidate_coverage_percent": 96.1121
+      },
+      "CMCC": {
+        "baseline_addresses": 159453952,
+        "candidate_exclusive_addresses": 37234712,
+        "common_addresses": 37041944,
+        "baseline_only_addresses": 122412008,
+        "candidate_only_addresses": 192768,
+        "baseline_coverage_percent": 23.2304,
+        "candidate_coverage_percent": 99.4822
+      },
+      "candidate_CT_CMCC_overlap_addresses_after_exclusion": 0
+    }
+  },
+  "interpretation_and_limits": [
+    "Both candidate sources cover nearly all of their own exclusive address space already present in the old production lists.",
+    "The old production CT list contains a materially larger address space than either candidate; the old production CMCC list is roughly four times the size of either candidate's exclusive CMCC space.",
+    "This comparison measures address-space similarity only. It cannot determine which source correctly classifies an IP as CT or CMCC.",
+    "The extra baseline-only ranges may be deliberate historical policy, stale allocations, other classifications, or a consequence of differing source methodology. They must not be deleted without classification review.",
+    "Candidate-only ranges are also not proof of correctness; they are simply ranges present in a candidate and absent from the old list.",
+    "No production RouterOS data was changed. The uploaded baseline file itself is not copied into this public repository."
+  ]
+}
