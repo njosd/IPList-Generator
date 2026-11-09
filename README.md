@@ -19,12 +19,12 @@ The subtraction is performed on address ranges, not merely identical CIDR string
 
 ## Generator
 
-`scripts/generate.py` uses Python's standard-library `ipaddress` module. It accepts local source files, validates IPv4 CIDRs, collapses each input set, subtracts the other ISP's address space, and writes:
+`scripts/generate.py` uses Python's standard-library `ipaddress` module. It accepts local source files, validates IPv4 CIDRs, merges address ranges, performs sorted interval subtraction/intersection, and writes:
 
 - RouterOS RSC containing only `dpbr-CT` and `dpbr-CMCC` address-list entries
 - JSON report with source counts, normalized counts, overlap size, exclusive counts and output checksums
 
-No third-party Python packages are required.
+No third-party Python packages are required. The interval operations are designed to scale to large IPv4 CIDR lists.
 
 ## Run locally
 
@@ -34,9 +34,22 @@ python3 scripts/generate.py --ct-file path/to/chinanet.txt --cmcc-file path/to/c
 
 Each input file must contain one IPv4 CIDR (or IPv4 address) per non-empty line. Blank lines and lines beginning with `#` are ignored. The script fails closed on malformed lines, empty inputs, IPv6 entries, or an empty exclusive result.
 
+## Initial source comparison
+
+A first snapshot comparison was recorded in [reports/source-comparison-2026-11-09.json](reports/source-comparison-2026-11-09.json).
+
+| Source pair | CT rows | CMCC rows | CT/CMCC overlap addresses |
+|---|---:|---:|---:|
+| gaoyifan/china-operator-ip | 2,576 | 944 | 584,448 |
+| metowolf/iplist | 3,080 | 1,493 | 0 |
+
+These are observations from one captured snapshot, not a source-quality verdict. The projects use different classification methods: gaoyifan describes BGP-path-based operator classification and notes that operator lists may overlap; metowolf describes its lists as based on OpenIPDB. Cross-source same-operator intersections are substantial but incomplete, and cross-operator intersections are also non-zero. The candidate sources are therefore not interchangeable.
+
+**Not yet done:** comparison against the user's existing production RSC, review of coverage/classification differences, and approval of a production source.
+
 ## GitHub Actions
 
-The workflow is initially manual-only and runs validation tests. Scheduled production generation and publication will remain disabled until the upstream URLs, source quality, output thresholds, and comparison report have been reviewed.
+Pushes affecting the generator or tests, and manual dispatches, run the validation workflow. There is no scheduled data download, production generation, or publication workflow yet.
 
 ## Router integration
 
