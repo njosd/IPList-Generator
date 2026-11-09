@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-09T07:18:52.481582+00:00",
+  "generated_at_utc": "2026-11-09T07:20:12.039255+00:00",
   "policy": "CT-only and CMCC-only address space; all overlap omitted",
   "sources": {
     "ct_file": "chinanet.txt",
