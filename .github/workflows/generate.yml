@@ -56,6 +56,9 @@ jobs:
           mkdir -p candidate
           cp output/ros-dpbr-CT-CMCC.rsc candidate/ros-dpbr-CT-CMCC.rsc
           cp output/report.json candidate/report.json
+          sed -e 's/list=dpbr-CT /list=dpbr-CT-TEST /g' \
+              -e 's/list=dpbr-CMCC /list=dpbr-CMCC-TEST /g' \
+              output/ros-dpbr-CT-CMCC.rsc > candidate/ros-dpbr-CT-CMCC-TEST.rsc
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add candidate/
@@ -71,5 +74,6 @@ jobs:
           path: |
             output/ros-dpbr-CT-CMCC.rsc
             output/report.json
+            candidate/ros-dpbr-CT-CMCC-TEST.rsc
           if-no-files-found: error
           retention-days: 30
