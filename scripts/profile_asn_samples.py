@@ -3,8 +3,7 @@
 
 This is a screening tool, not a complete BGP route-table dump. For every CIDR in
 the old baseline that is absent from the candidate operator-exclusive list, it
-samples five addresses (first, 25%, midpoint, 75%, last), then queries Team
-Cymru's DNS-based origin-ASN service with the system 'dig' command.
+samples five addresses (first, 25%, midpoint, 75%, last), then queries Team Cymru's bulk WHOIS TCP/43 origin-ASN service in bounded batches.
 
 The raw baseline, extracted CIDRs, sample IPs, and individual ASN results remain
 local. Only aggregate JSON summaries are written. No router is contacted.
@@ -15,8 +14,7 @@ import argparse
 import collections
 import ipaddress
 import json
-import shutil
-import subprocess
+import socket
 import sys
 from pathlib import Path
 
@@ -36,41 +34,64 @@ def sample_ips(networks):
             samples.add(str(ipaddress.IPv4Address(first + offset)))
     return sorted(samples, key=lambda x: int(ipaddress.IPv4Address(x)))
 
-def query_cymru(ips, dig_path, timeout):
-    # Cymru DNS query format: reversed-IP.origin.asn.cymru.com TXT
-    queries = []
-    for ip in ips:
-        rev = ".".join(reversed(ip.split(".")))
-        queries.append(f"{rev}.origin.asn.cymru.com")
+def query_cymru(ips, timeout, batch_size):
+    """Query Team Cymru bulk WHOIS over TCP/43; return results keyed by input IP."""
     results = {}
-    # Chunk the input to avoid command-line length limits and excessive bursts.
-    # Small batches reduce resolver load and avoid one slow batch holding up
-    # hundreds of otherwise successful lookups.
-    batch_size = 10
-    for start in range(0, len(queries), batch_size):
-        chunk = queries[start:start + batch_size]
-        proc = subprocess.run(
-            [dig_path, "+time=2", "+tries=1", "+noall", "+answer", "TXT", *chunk],
-            text=True, capture_output=True, timeout=timeout, check=False
-        )
-        if proc.returncode not in (0,):
-            raise RuntimeError(f"dig failed (exit {proc.returncode}): {proc.stderr.strip()}")
-        # +answer includes the queried owner name, so missing answers can never
-        # shift the mapping and be assigned to the wrong IP.
-        for ip, qname in zip(ips[start:start + len(chunk)], chunk):
+    total_batches = (len(ips) + batch_size - 1) // batch_size
+    for batch_no, start in enumerate(range(0, len(ips), batch_size), 1):
+        chunk = ips[start:start + batch_size]
+        payload = "begin\\nverbose\\n" + "\\n".join(chunk) + "\\nend\\n"
+        try:
+            with socket.create_connection(("whois.cymru.com", 43), timeout=timeout) as sock:
+                sock.settimeout(timeout)
+                sock.sendall(payload.encode("ascii"))
+                sock.shutdown(socket.SHUT_WR)
+                chunks = []
+                while True:
+                    data = sock.recv(65536)
+                    if not data:
+                        break
+                    chunks.append(data)
+            response = b"".join(chunks).decode("utf-8", errors="replace")
+        except (OSError, TimeoutError) as exc:
+            raise RuntimeError(
+                f"Team Cymru TCP/43 batch {batch_no}/{total_batches} failed: {exc}"
+            ) from exc
+
+        for ip in chunk:
             results[ip] = None
-        for line in proc.stdout.splitlines():
-            fields = line.split()
-            if len(fields) < 5 or not fields[0].endswith(".origin.asn.cymru.com."):
+        for line in response.splitlines():
+            if "|" not in line:
                 continue
-            owner = fields[0].removesuffix(".origin.asn.cymru.com.")
+            fields = [part.strip() for part in line.split("|")]
+            if len(fields) < 3:
+                continue
             try:
-                queried_ip = ".".join(reversed(owner.split(".")))
-                ipaddress.IPv4Address(queried_ip)
+                returned_ip = str(ipaddress.IPv4Address(fields[1]))
             except ValueError:
                 continue
-            txt = " ".join(fields[4:])
-            results[queried_ip] = parse_answer(txt)
+            if returned_ip not in results:
+                continue
+            try:
+                asn = int(fields[0])
+                prefix = str(ipaddress.ip_network(fields[2], strict=False))
+            except (ValueError, TypeError):
+                continue
+            results[returned_ip] = {
+                "asn": asn,
+                "prefix": prefix,
+                "country": fields[3] if len(fields) > 3 else "",
+                "registry": fields[4] if len(fields) > 4 else "",
+                "allocated": fields[5] if len(fields) > 5 else "",
+                "as_name": fields[6] if len(fields) > 6 else "",
+            }
+        answered = sum(value is not None for value in results.values())
+        print(
+            f"WHOIS batch {batch_no}/{total_batches}: "
+            f"{len(chunk)} samples submitted; {answered}/{len(ips)} answered",
+            file=sys.stderr,
+            flush=True,
+        )
     return results
 
 def parse_answer(line):
@@ -92,10 +113,10 @@ def parse_answer(line):
         "allocated": parts[4] if len(parts) > 4 else "",
     }
 
-def summarize(label, baseline, candidate, dig_path, timeout):
+def summarize(label, baseline, candidate, timeout, batch_size):
     old_only = subtract_networks(baseline, candidate)
     ips = sample_ips(old_only)
-    answers = query_cymru(ips, dig_path, timeout)
+    answers = query_cymru(ips, timeout, batch_size)
     by_asn = collections.defaultdict(lambda: {"sample_count": 0, "sampled_ips": 0, "bgp_prefixes": set(), "countries": set()})
     no_answer = 0
     for ip, answer in answers.items():
@@ -138,12 +159,11 @@ def main():
     p.add_argument("--ct-file", required=True, type=Path)
     p.add_argument("--cmcc-file", required=True, type=Path)
     p.add_argument("--report", required=True, type=Path)
-    p.add_argument("--timeout", type=int, default=45)
+    p.add_argument("--timeout", type=int, default=20, help="TCP connect/read timeout per batch, seconds")
+    p.add_argument("--batch-size", type=int, default=500, help="sample IPs per WHOIS connection")
     args = p.parse_args()
-    dig = shutil.which("dig")
-    if not dig:
-        print("ERROR: 'dig' not found. Install macOS command-line DNS tools or use Homebrew bind.", file=sys.stderr)
-        return 2
+    if args.timeout < 1 or args.batch_size < 1:
+        p.error("--timeout and --batch-size must be positive")
     try:
         baseline = read_rsc_lists(args.baseline_rsc)
         ct_source, _ = read_networks(args.ct_file)
@@ -157,11 +177,13 @@ def main():
                 "ct_file": args.ct_file.name,
                 "cmcc_file": args.cmcc_file.name
             },
-            "query_service": "Team Cymru DNS origin ASN service",
+            "query_service": "Team Cymru bulk WHOIS TCP/43 origin ASN service",
             "sampling": "first, 25%, midpoint, 75%, last address of each baseline-only CIDR; deduplicated",
+            "query_batch_size": args.batch_size,
+            "per_batch_timeout_seconds": args.timeout,
             "results": [
-                summarize("dpbr-CT vs candidate", baseline["dpbr-CT"], ct_candidate, dig, args.timeout),
-                summarize("dpbr-CMCC vs candidate", baseline["dpbr-CMCC"], cmcc_candidate, dig, args.timeout)
+                summarize("dpbr-CT vs candidate", baseline["dpbr-CT"], ct_candidate, args.timeout, args.batch_size),
+                summarize("dpbr-CMCC vs candidate", baseline["dpbr-CMCC"], cmcc_candidate, args.timeout, args.batch_size)
             ],
             "privacy": "No raw CIDRs, sample IPs, or per-IP ASN records are written to this report."
         }
