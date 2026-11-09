@@ -1,0 +1,62 @@
+name: Generate ISP address lists
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 3 * * *"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/**"
+      - "tests/**"
+      - ".github/workflows/generate.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Run unit tests
+        run: python -m unittest discover -v
+
+      - name: Download gaoyifan ISP datasets
+        run: |
+          mkdir -p work output
+          curl --fail --location --silent --show-error \
+            https://raw.githubusercontent.com/gaoyifan/china-operator-ip/ip-lists/chinanet.txt \
+            --output work/chinanet.txt
+          curl --fail --location --silent --show-error \
+            https://raw.githubusercontent.com/gaoyifan/china-operator-ip/ip-lists/cmcc.txt \
+            --output work/cmcc.txt
+          test -s work/chinanet.txt
+          test -s work/cmcc.txt
+
+      - name: Generate RouterOS lists
+        run: |
+          python scripts/generate.py \
+            --ct-file work/chinanet.txt \
+            --cmcc-file work/cmcc.txt \
+            --output output/ros-dpbr-CT-CMCC.rsc \
+            --report output/report.json
+          test -s output/ros-dpbr-CT-CMCC.rsc
+          test -s output/report.json
+
+      - name: Save generated candidate files
+        uses: actions/upload-artifact@v4
+        with:
+          name: iplist-candidate-${{ github.run_id }}
+          path: |
+            output/ros-dpbr-CT-CMCC.rsc
+            output/report.json
+          if-no-files-found: error
+          retention-days: 30
