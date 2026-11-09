@@ -22,7 +22,6 @@ def read_networks(path: Path) -> tuple[list[Network], int]:
     parsed: list[Network] = []
     raw_count = 0
     errors: list[str] = []
-
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except OSError as exc:
@@ -47,64 +46,70 @@ def read_networks(path: Path) -> tuple[list[Network], int]:
         raise ValueError(f"invalid source entries ({len(errors)}):\n{preview}{suffix}")
     if not parsed:
         raise ValueError(f"{path}: source is empty")
-
-    # Collapse overlapping/adjacent prefixes into a canonical minimal set.
     return list(ipaddress.collapse_addresses(parsed)), raw_count
 
 
+def _bounds(networks: Iterable[Network]) -> list[tuple[int, int]]:
+    return sorted((int(n.network_address), int(n.broadcast_address)) for n in networks)
+
+
+def _from_bounds(start: int, end: int) -> list[Network]:
+    return list(ipaddress.summarize_address_range(
+        ipaddress.IPv4Address(start), ipaddress.IPv4Address(end)
+    ))
+
+
 def subtract_networks(source: Iterable[Network], excluded: Iterable[Network]) -> list[Network]:
-    """Return source address space minus excluded address space, exactly."""
-    exclusions = list(excluded)
+    """Return source address space minus excluded address space in O(n log n)."""
+    src = _bounds(source)
+    exc = _bounds(excluded)
     result: list[Network] = []
+    j = 0
 
-    for original in source:
-        fragments = [original]
-        for other in exclusions:
-            if not original.overlaps(other):
-                continue
-            next_fragments: list[Network] = []
-            for fragment in fragments:
-                if not fragment.overlaps(other):
-                    next_fragments.append(fragment)
-                elif fragment.subnet_of(other):
-                    # Entire fragment is excluded.
-                    continue
-                elif other.subnet_of(fragment):
-                    next_fragments.extend(fragment.address_exclude(other))
-                else:
-                    # With valid CIDRs, overlapping networks are nested.
-                    raise AssertionError(f"unexpected non-nested overlap: {fragment}, {other}")
-            fragments = next_fragments
-            if not fragments:
+    for start, end in src:
+        cursor = start
+        while j < len(exc) and exc[j][1] < cursor:
+            j += 1
+        k = j
+        while k < len(exc) and exc[k][0] <= end:
+            ex_start, ex_end = exc[k]
+            if ex_start > cursor:
+                result.extend(_from_bounds(cursor, min(end, ex_start - 1)))
+            cursor = max(cursor, ex_end + 1)
+            if cursor > end:
                 break
-        result.extend(fragments)
-
+            k += 1
+        if cursor <= end:
+            result.extend(_from_bounds(cursor, end))
     return list(ipaddress.collapse_addresses(result))
 
 
 def overlap_networks(a: Iterable[Network], b: Iterable[Network]) -> list[Network]:
+    """Return the intersection of two disjoint, collapsed network sets."""
+    left = _bounds(a)
+    right = _bounds(b)
     intersections: list[Network] = []
-    for left in a:
-        for right in b:
-            if not left.overlaps(right):
-                continue
-            if left.subnet_of(right):
-                intersections.append(left)
-            elif right.subnet_of(left):
-                intersections.append(right)
-            else:
-                raise AssertionError(f"unexpected non-nested overlap: {left}, {right}")
+    i = j = 0
+    while i < len(left) and j < len(right):
+        lo = max(left[i][0], right[j][0])
+        hi = min(left[i][1], right[j][1])
+        if lo <= hi:
+            intersections.extend(_from_bounds(lo, hi))
+        if left[i][1] < right[j][1]:
+            i += 1
+        else:
+            j += 1
     return list(ipaddress.collapse_addresses(intersections))
 
 
 def validate_disjoint(ct_only: list[Network], cmcc_only: list[Network]) -> None:
+    ct = _bounds(ct_only)
+    cmcc = _bounds(cmcc_only)
     i = j = 0
-    ct = sorted(ct_only, key=lambda n: int(n.network_address))
-    cmcc = sorted(cmcc_only, key=lambda n: int(n.network_address))
     while i < len(ct) and j < len(cmcc):
-        if ct[i].overlaps(cmcc[j]):
+        if ct[i][0] <= cmcc[j][1] and cmcc[j][0] <= ct[i][1]:
             raise ValueError(f"final output overlaps: {ct[i]} and {cmcc[j]}")
-        if int(ct[i].broadcast_address) < int(cmcc[j].network_address):
+        if ct[i][1] < cmcc[j][1]:
             i += 1
         else:
             j += 1
@@ -137,7 +142,6 @@ def main() -> int:
     try:
         ct, ct_raw = read_networks(args.ct_file)
         cmcc, cmcc_raw = read_networks(args.cmcc_file)
-
         overlap = overlap_networks(ct, cmcc)
         ct_only = subtract_networks(ct, cmcc)
         cmcc_only = subtract_networks(cmcc, ct)
@@ -147,8 +151,6 @@ def main() -> int:
             raise ValueError("one exclusive output list is empty; refusing to generate")
 
         rsc = render_rsc(ct_only, cmcc_only)
-        # Structural allow-list: generated content may contain only the header
-        # and address-list add commands for the two expected list names.
         for line in rsc.splitlines():
             if line.startswith("#") or line == "/ip firewall address-list":
                 continue
@@ -159,7 +161,6 @@ def main() -> int:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.report.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(rsc, encoding="utf-8", newline="\n")
-
         report = {
             "generated_at_utc": datetime.now(timezone.utc).isoformat(),
             "policy": "CT-only and CMCC-only address space; all overlap omitted",
