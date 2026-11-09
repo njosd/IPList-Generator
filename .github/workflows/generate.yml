@@ -12,7 +12,7 @@ on:
       - ".github/workflows/generate.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   generate:
@@ -50,6 +50,19 @@ jobs:
             --report output/report.json
           test -s output/ros-dpbr-CT-CMCC.rsc
           test -s output/report.json
+
+      - name: Publish latest reviewed candidate files to repository
+        run: |
+          mkdir -p candidate
+          cp output/ros-dpbr-CT-CMCC.rsc candidate/ros-dpbr-CT-CMCC.rsc
+          cp output/report.json candidate/report.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add candidate/
+          if ! git diff --cached --quiet; then
+            git commit -m "Update generated ISP address-list candidate"
+            git push
+          fi
 
       - name: Save generated candidate files
         uses: actions/upload-artifact@v4
