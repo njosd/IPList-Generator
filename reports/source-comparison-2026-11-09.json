@@ -1,0 +1,49 @@
+{
+  "captured_at_utc": "2026-11-09",
+  "method": "Downloaded the four public IPv4 CIDR files, normalized each list to merged address intervals, and computed address-space intersections and differences. Counts below are address counts, not number of CIDR rows.",
+  "sources": {
+    "gaoyifan": {
+      "ct_url": "https://raw.githubusercontent.com/gaoyifan/china-operator-ip/ip-lists/chinanet.txt",
+      "cmcc_url": "https://raw.githubusercontent.com/gaoyifan/china-operator-ip/ip-lists/cmcc.txt",
+      "ct_input_rows": 2576,
+      "cmcc_input_rows": 944,
+      "ct_collapsed_intervals": 1814,
+      "cmcc_collapsed_intervals": 666,
+      "ct_source_addresses": 132109823,
+      "cmcc_source_addresses": 42132736,
+      "ct_cmcc_overlap_addresses": 584448,
+      "ct_only_addresses": 131525375,
+      "cmcc_only_addresses": 41548288,
+      "ct_only_cidr_count": 1706,
+      "cmcc_only_cidr_count": 627
+    },
+    "metowolf": {
+      "ct_url": "https://raw.githubusercontent.com/metowolf/iplist/master/data/isp/chinatelecom.txt",
+      "cmcc_url": "https://raw.githubusercontent.com/metowolf/iplist/master/data/isp/chinamobile.txt",
+      "ct_input_rows": 3080,
+      "cmcc_input_rows": 1493,
+      "ct_collapsed_intervals": 2085,
+      "cmcc_collapsed_intervals": 588,
+      "ct_source_addresses": 119458064,
+      "cmcc_source_addresses": 37234712,
+      "ct_cmcc_overlap_addresses": 0,
+      "ct_only_addresses": 119458064,
+      "cmcc_only_addresses": 37234712,
+      "ct_only_cidr_count": 2085,
+      "cmcc_only_cidr_count": 588
+    }
+  },
+  "cross_source_address_intersections": {
+    "gaoyifan_ct_and_metowolf_ct": 109607432,
+    "gaoyifan_cmcc_and_metowolf_cmcc": 34705432,
+    "gaoyifan_ct_and_metowolf_cmcc": 256,
+    "gaoyifan_cmcc_and_metowolf_ct": 65280
+  },
+  "interpretation": [
+    "The gaoyifan source pair contains 584448 addresses classified in both operator lists; the agreed generator policy removes this shared address space from both outputs.",
+    "The metowolf source pair had no CT/CMCC address overlap in this snapshot. This is an observed property of this snapshot, not a guarantee for future versions.",
+    "Same-operator cross-source intersections are substantial but not complete, so the two projects are not interchangeable snapshots.",
+    "Cross-operator cross-source intersections are non-zero. This highlights classification disagreement between projects and must be reviewed rather than treated as proof that one source is correct.",
+    "This report does not compare either candidate against the user's historical production RSC yet."
+  ]
+}
