@@ -44,10 +44,13 @@ def query_cymru(ips, dig_path, timeout):
         queries.append(f"{rev}.origin.asn.cymru.com")
     results = {}
     # Chunk the input to avoid command-line length limits and excessive bursts.
-    for start in range(0, len(queries), 100):
-        chunk = queries[start:start + 100]
+    # Small batches reduce resolver load and avoid one slow batch holding up
+    # hundreds of otherwise successful lookups.
+    batch_size = 10
+    for start in range(0, len(queries), batch_size):
+        chunk = queries[start:start + batch_size]
         proc = subprocess.run(
-            [dig_path, "+time=3", "+tries=1", "+noall", "+answer", "TXT", *chunk],
+            [dig_path, "+time=2", "+tries=1", "+noall", "+answer", "TXT", *chunk],
             text=True, capture_output=True, timeout=timeout, check=False
         )
         if proc.returncode not in (0,):
@@ -135,7 +138,7 @@ def main():
     p.add_argument("--ct-file", required=True, type=Path)
     p.add_argument("--cmcc-file", required=True, type=Path)
     p.add_argument("--report", required=True, type=Path)
-    p.add_argument("--timeout", type=int, default=20)
+    p.add_argument("--timeout", type=int, default=45)
     args = p.parse_args()
     dig = shutil.which("dig")
     if not dig:
