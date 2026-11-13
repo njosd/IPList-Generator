@@ -1441,7 +1441,6 @@ add list=dpbr-CT-TEST address=124.251.40.0/22
 add list=dpbr-CT-TEST address=124.251.52.0/22
 add list=dpbr-CT-TEST address=124.251.60.0/22
 add list=dpbr-CT-TEST address=124.251.110.0/24
-add list=dpbr-CT-TEST address=124.251.128.0/23
 add list=dpbr-CT-TEST address=124.251.132.0/22
 add list=dpbr-CT-TEST address=124.251.215.0/24
 add list=dpbr-CT-TEST address=124.251.231.0/24
@@ -1697,8 +1696,6 @@ add list=dpbr-CT-TEST address=183.160.0.0/13
 add list=dpbr-CT-TEST address=185.75.173.0/24
 add list=dpbr-CT-TEST address=185.75.174.0/24
 add list=dpbr-CT-TEST address=185.80.200.0/22
-add list=dpbr-CT-TEST address=189.24.118.0/23
-add list=dpbr-CT-TEST address=189.24.121.0/24
 add list=dpbr-CT-TEST address=192.140.160.0/19
 add list=dpbr-CT-TEST address=192.140.208.0/24
 add list=dpbr-CT-TEST address=192.163.11.0/24
@@ -2009,7 +2006,6 @@ add list=dpbr-CT-TEST address=203.212.80.0/23
 add list=dpbr-CT-TEST address=203.215.232.0/23
 add list=dpbr-CT-TEST address=203.215.236.0/24
 add list=dpbr-CT-TEST address=203.223.21.0/24
-add list=dpbr-CT-TEST address=206.109.75.0/24
 add list=dpbr-CT-TEST address=207.57.167.0/24
 add list=dpbr-CT-TEST address=207.57.168.0/24
 add list=dpbr-CT-TEST address=207.57.174.0/24
@@ -2109,7 +2105,6 @@ add list=dpbr-CT-TEST address=211.150.122.0/24
 add list=dpbr-CT-TEST address=211.150.124.0/23
 add list=dpbr-CT-TEST address=211.150.128.0/24
 add list=dpbr-CT-TEST address=211.151.20.0/22
-add list=dpbr-CT-TEST address=211.151.218.0/24
 add list=dpbr-CT-TEST address=211.152.32.0/19
 add list=dpbr-CT-TEST address=211.152.64.0/19
 add list=dpbr-CT-TEST address=211.152.98.0/23
@@ -2265,7 +2260,6 @@ add list=dpbr-CT-TEST address=218.241.112.0/24
 add list=dpbr-CT-TEST address=218.242.0.0/16
 add list=dpbr-CT-TEST address=218.244.0.0/19
 add list=dpbr-CT-TEST address=218.244.160.0/19
-add list=dpbr-CT-TEST address=218.245.7.0/24
 add list=dpbr-CT-TEST address=218.245.8.0/21
 add list=dpbr-CT-TEST address=218.245.16.0/23
 add list=dpbr-CT-TEST address=218.245.20.0/22
@@ -2617,8 +2611,6 @@ add list=dpbr-CMCC-TEST address=103.59.151.0/24
 add list=dpbr-CMCC-TEST address=103.60.164.0/22
 add list=dpbr-CMCC-TEST address=103.60.236.0/22
 add list=dpbr-CMCC-TEST address=103.65.224.0/23
-add list=dpbr-CMCC-TEST address=103.74.125.0/24
-add list=dpbr-CMCC-TEST address=103.74.126.0/24
 add list=dpbr-CMCC-TEST address=103.78.228.0/22
 add list=dpbr-CMCC-TEST address=103.79.24.0/23
 add list=dpbr-CMCC-TEST address=103.79.27.0/24
@@ -2926,8 +2918,6 @@ add list=dpbr-CMCC-TEST address=122.94.0.0/16
 add list=dpbr-CMCC-TEST address=122.144.194.0/24
 add list=dpbr-CMCC-TEST address=123.49.194.0/24
 add list=dpbr-CMCC-TEST address=123.49.231.0/24
-add list=dpbr-CMCC-TEST address=123.49.244.0/24
-add list=dpbr-CMCC-TEST address=123.49.246.0/23
 add list=dpbr-CMCC-TEST address=123.58.0.0/20
 add list=dpbr-CMCC-TEST address=123.58.18.0/24
 add list=dpbr-CMCC-TEST address=123.58.32.0/23
@@ -3165,10 +3155,7 @@ add list=dpbr-CMCC-TEST address=211.151.192.0/21
 add list=dpbr-CMCC-TEST address=211.151.200.0/22
 add list=dpbr-CMCC-TEST address=211.151.204.0/23
 add list=dpbr-CMCC-TEST address=211.151.206.0/24
-add list=dpbr-CMCC-TEST address=211.151.208.0/21
-add list=dpbr-CMCC-TEST address=211.151.216.0/23
-add list=dpbr-CMCC-TEST address=211.151.219.0/24
-add list=dpbr-CMCC-TEST address=211.151.220.0/22
+add list=dpbr-CMCC-TEST address=211.151.208.0/20
 add list=dpbr-CMCC-TEST address=211.151.224.0/23
 add list=dpbr-CMCC-TEST address=211.151.228.0/22
 add list=dpbr-CMCC-TEST address=211.151.232.0/21
