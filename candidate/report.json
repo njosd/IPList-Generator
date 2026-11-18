@@ -1,26 +1,26 @@
 {
-  "generated_at_utc": "2026-11-17T12:18:59.767918+00:00",
+  "generated_at_utc": "2026-11-18T12:05:45.629860+00:00",
   "policy": "CT-only and CMCC-only address space; all overlap omitted",
   "sources": {
     "ct_file": "chinanet.txt",
     "cmcc_file": "cmcc.txt",
-    "ct_raw_entries": 2849,
-    "cmcc_raw_entries": 1030,
-    "ct_collapsed_prefixes": 2849,
-    "cmcc_collapsed_prefixes": 1030
+    "ct_raw_entries": 2852,
+    "cmcc_raw_entries": 1032,
+    "ct_collapsed_prefixes": 2852,
+    "cmcc_collapsed_prefixes": 1032
   },
   "results": {
     "overlap_prefixes": 253,
     "overlap_addresses": 806656,
-    "ct_only_prefixes": 2642,
-    "ct_only_addresses": 135628031,
-    "cmcc_only_prefixes": 920,
+    "ct_only_prefixes": 2645,
+    "ct_only_addresses": 135630847,
+    "cmcc_only_prefixes": 919,
     "cmcc_only_addresses": 41632512,
     "final_lists_disjoint": true
   },
   "output": {
     "file": "ros-dpbr-CT-CMCC.rsc",
-    "bytes": 147056,
-    "sha256": "db6fa80ddef579e19f725e1160ab9158918e5f51f7e62df80674942330356577"
+    "bytes": 147138,
+    "sha256": "86e674bf2209f2d995ed19dbc4a08c1d23ab3625f4ab05dbe4f662a166773418"
   }
 }
