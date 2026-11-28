@@ -863,10 +863,7 @@ add list=dpbr-CT address=109.244.192.0/21
 add list=dpbr-CT address=109.244.224.0/19
 add list=dpbr-CT address=110.40.16.0/24
 add list=dpbr-CT address=110.42.15.0/24
-add list=dpbr-CT address=110.42.16.0/24
-add list=dpbr-CT address=110.42.18.0/23
-add list=dpbr-CT address=110.42.20.0/22
-add list=dpbr-CT address=110.42.24.0/21
+add list=dpbr-CT address=110.42.16.0/20
 add list=dpbr-CT address=110.42.32.0/19
 add list=dpbr-CT address=110.42.64.0/18
 add list=dpbr-CT address=110.43.0.0/18
@@ -2242,7 +2239,7 @@ add list=dpbr-CT address=210.5.60.0/22
 add list=dpbr-CT address=210.5.145.0/24
 add list=dpbr-CT address=210.5.146.0/23
 add list=dpbr-CT address=210.5.148.0/23
-add list=dpbr-CT address=210.5.152.0/23
+add list=dpbr-CT address=210.5.152.0/24
 add list=dpbr-CT address=210.5.154.0/24
 add list=dpbr-CT address=210.5.156.0/22
 add list=dpbr-CT address=210.14.65.0/24
@@ -3174,7 +3171,6 @@ add list=dpbr-CMCC address=120.136.190.0/24
 add list=dpbr-CMCC address=120.192.0.0/10
 add list=dpbr-CMCC address=121.46.16.0/20
 add list=dpbr-CMCC address=121.52.222.0/23
-add list=dpbr-CMCC address=121.58.156.0/23
 add list=dpbr-CMCC address=121.70.0.0/17
 add list=dpbr-CMCC address=121.79.131.0/24
 add list=dpbr-CMCC address=121.79.132.0/24
@@ -3190,8 +3186,6 @@ add list=dpbr-CMCC address=122.72.57.0/24
 add list=dpbr-CMCC address=122.72.112.0/24
 add list=dpbr-CMCC address=122.94.0.0/16
 add list=dpbr-CMCC address=122.144.194.0/24
-add list=dpbr-CMCC address=122.200.104.0/22
-add list=dpbr-CMCC address=122.200.120.0/22
 add list=dpbr-CMCC address=123.49.194.0/24
 add list=dpbr-CMCC address=123.49.231.0/24
 add list=dpbr-CMCC address=123.58.0.0/20
@@ -3401,6 +3395,7 @@ add list=dpbr-CMCC address=203.212.12.0/22
 add list=dpbr-CMCC address=210.5.22.0/24
 add list=dpbr-CMCC address=210.5.144.0/24
 add list=dpbr-CMCC address=210.5.150.0/23
+add list=dpbr-CMCC address=210.5.153.0/24
 add list=dpbr-CMCC address=210.5.155.0/24
 add list=dpbr-CMCC address=210.14.128.0/19
 add list=dpbr-CMCC address=210.73.208.0/20
